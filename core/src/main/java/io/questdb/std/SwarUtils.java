@@ -28,6 +28,8 @@ package io.questdb.std;
  * A collection of SWAR utilities inspired by <a href="https://github.com/ada-url/ada">Ada URL parser</a>.
  */
 public final class SwarUtils {
+    private static final long BROADCAST_MULT = 0x101010101010101L;
+
 
     private SwarUtils() {
     }
@@ -36,7 +38,9 @@ public final class SwarUtils {
      * Broadcasts the given byte to a long.
      */
     public static long broadcast(byte b) {
-        return 0x101010101010101L * (b & 0xffL);
+        // Mask into int first to avoid unnecessary long promotions on the byte value
+        final int ub = b & 0xff;
+        return BROADCAST_MULT * ub;
     }
 
     /**
