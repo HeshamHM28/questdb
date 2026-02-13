@@ -220,7 +220,10 @@ public final class Decimals {
      * @throws IllegalArgumentException if precision is invalid
      */
     public static int getStorageSizePow2(int precision) {
-        if (precision < 1 || precision > MAX_PRECISION) {
+        // Use unsigned comparison to check bounds with single operation
+        // precision - 1 converts range [1, MAX_PRECISION] to [0, MAX_PRECISION-1]
+        int index = precision - 1;
+        if (Integer.compareUnsigned(index, MAX_PRECISION) >= 0) {
             throw new IllegalArgumentException("Invalid decimal precision: " + precision +
                     ". Must be between 1 and " + MAX_PRECISION);
         }
