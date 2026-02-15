@@ -410,14 +410,18 @@ public final class DecimalUtil {
             int precision,
             int scale
     ) throws SqlException {
-        Decimal256 decimal256 = executionContext.getDecimal256();
+        // We might not know the precision of the final type, in this case we want to use
+        // the decimal that have the most precision.
+        final Decimal256 decimal256 = executionContext.getDecimal256();
+        final int len = tok.length();
+        Decimal decimal = precision > 0 ? getDecimal(executionContext, precision) : decimal256;
         try {
-            // We might not know the precision of the final type, in this case we want to use
-            // the decimal that have the most precision.
-            Decimal decimal = precision > 0 ? getDecimal(executionContext, precision) : decimal256;
-            long r = DecimalParser.parse(decimal, tok, 0, tok.length(), precision, scale, false, false);
+            long r = DecimalParser.parse(decimal, tok, 0, len, precision, scale, false, false);
             precision = precision == -1 ? Numbers.decodeLowInt(r) : precision;
-            decimal.toDecimal256(decimal256);
+            // Only convert to Decimal256 if the parser used a different decimal instance.
+            if (decimal != decimal256) {
+                decimal.toDecimal256(decimal256);
+            }
         } catch (NumericException ex) {
             throw SqlException.position(position).put(ex);
         }
