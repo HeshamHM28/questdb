@@ -449,14 +449,51 @@ public final class DecimalUtil {
      * @throws SqlException if the value couldn't be parsed
      */
     public static int parseScale(int position, @NotNull CharSequence cs, int lo, int hi) throws SqlException {
-        try {
-            return Numbers.parseInt(cs, lo, hi);
-        } catch (NumericException e) {
+        // Fast path: inline parsing to avoid exception allocation and Numbers.parseInt overhead.
+        // Behavior preserved: on any invalid input we throw the same SqlException with identical message.
+        if (lo >= hi) {
             throw SqlException.position(position)
                     .put("Invalid decimal type. The scale ('")
                     .put(cs, lo, hi)
                     .put("') must be a number");
         }
+
+        int i = lo;
+        final CharSequence s = cs;
+        boolean negative = false;
+        char ch = s.charAt(i);
+        if (ch == '+' || ch == '-') {
+            negative = (ch == '-');
+            i++;
+            if (i >= hi) {
+                throw SqlException.position(position)
+                        .put("Invalid decimal type. The scale ('")
+                        .put(cs, lo, hi)
+                        .put("') must be a number");
+            }
+        }
+
+        int result = 0;
+        while (i < hi) {
+            ch = s.charAt(i++);
+            int digit = ch - '0';
+            if (digit < 0 || digit > 9) {
+                throw SqlException.position(position)
+                        .put("Invalid decimal type. The scale ('")
+                        .put(cs, lo, hi)
+                        .put("') must be a number");
+            }
+            // check overflow: result * 10 + digit > Integer.MAX_VALUE
+            if (result > (Integer.MAX_VALUE - digit) / 10) {
+                throw SqlException.position(position)
+                        .put("Invalid decimal type. The scale ('")
+                        .put(cs, lo, hi)
+                        .put("') must be a number");
+            }
+            result = result * 10 + digit;
+        }
+
+        return negative ? -result : result;
     }
 
     /**
