@@ -432,14 +432,44 @@ public final class DecimalUtil {
      * @throws SqlException if the value couldn't be parsed
      */
     public static int parsePrecision(int position, @NotNull CharSequence cs, int lo, int hi) throws SqlException {
-        try {
-            return Numbers.parseInt(cs, lo, hi);
-        } catch (NumericException e) {
-            throw SqlException.position(position)
-                    .put("Invalid decimal type. The precision ('")
-                    .put(cs, lo, hi)
-                    .put("') must be a number");
+        // Inline parse to avoid NumericException allocation and method-call overhead.
+        // Uses the same negative-accumulation overflow detection as Integer.parseInt.
+        int i = lo;
+        if (i >= hi) {
+            throwInvalidPrecision(position, cs, lo, hi);
         }
+
+        char first = cs.charAt(i);
+        boolean negative = false;
+        if (first == '-' || first == '+') {
+            negative = first == '-';
+            i++;
+            if (i >= hi) {
+                throwInvalidPrecision(position, cs, lo, hi);
+            }
+        }
+
+        int limit = negative ? Integer.MIN_VALUE : -Integer.MAX_VALUE;
+        int multmin = limit / 10;
+        int result = 0;
+
+        while (i < hi) {
+            char ch = cs.charAt(i++);
+            int digit = ch - '0';
+            if (digit < 0 || digit > 9) {
+                throwInvalidPrecision(position, cs, lo, hi);
+            }
+            if (result < multmin) {
+                throwInvalidPrecision(position, cs, lo, hi);
+            }
+            result *= 10;
+            if (result < limit + digit) {
+                throwInvalidPrecision(position, cs, lo, hi);
+            }
+            result -= digit;
+        }
+
+        return negative ? result : -result;
     }
 
     /**
@@ -594,4 +624,11 @@ public final class DecimalUtil {
                 break;
         }
     }
+
+    private static void throwInvalidPrecision(int position, @NotNull CharSequence cs, int lo, int hi) throws SqlException {
+            throw SqlException.position(position)
+                    .put("Invalid decimal type. The precision ('")
+                    .put(cs, lo, hi)
+                    .put("') must be a number");
+        }
 }
