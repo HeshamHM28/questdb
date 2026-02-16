@@ -61,7 +61,14 @@ public class IntStack implements Mutable {
     }
 
     public int peek() {
-        return peek(0);
+        // Inline peek(0) to avoid an extra virtual call and reduce field access in the hot path.
+        int currentHead = head;
+        if (currentHead == bottom) {
+            return NO_ENTRY_VALUE;
+        }
+        // compute index of the top element (head points to next insertion slot)
+        int idx = (currentHead - 1) & mask;
+        return elements[idx];
     }
 
     public int peek(int n) {
