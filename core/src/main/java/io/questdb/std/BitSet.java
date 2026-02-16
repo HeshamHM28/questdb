@@ -54,7 +54,11 @@ public class BitSet implements Mutable {
 
     public boolean get(int bitIndex) {
         int wordIndex = wordIndex(bitIndex);
-        return wordIndex < words.length && (words[wordIndex] & 1L << bitIndex) != 0L;
+        long[] w = this.words;
+        if (wordIndex >= w.length) {
+            return false;
+        }
+        return (w[wordIndex] & (1L << (bitIndex & 63))) != 0L;
     }
 
     /**
