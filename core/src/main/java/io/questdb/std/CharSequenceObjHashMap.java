@@ -115,12 +115,15 @@ public class CharSequenceObjHashMap<V> extends AbstractCharSequenceHashSet {
     }
 
     private boolean putAt0(int index, CharSequence key, V value) {
+        // Cache arrays locally to reduce field reads in hot paths
+        final V[] vals = values;
+        final CharSequence[] ks = keys;
         if (index < 0) {
-            values[-index - 1] = value;
+            vals[-index - 1] = value;
             return false;
         } else {
-            keys[index] = key;
-            values[index] = value;
+            ks[index] = key;
+            vals[index] = value;
             if (--free == 0) {
                 rehash();
             }
