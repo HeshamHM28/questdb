@@ -73,10 +73,8 @@ public class IntStack implements Mutable {
             throw new IllegalStateException("pollLast() called while bottom != 0");
         }
         final int[] elems = elements;
-        int newTail = tail;
-        if (head != newTail && --newTail < 0) {
-            newTail = mask;
-        }
+        final int currentTail = tail;
+        final int newTail = (currentTail - 1) & mask;
         final int elem = elems[newTail];
         tail = newTail;
         elems[newTail] = NO_ENTRY_VALUE;
