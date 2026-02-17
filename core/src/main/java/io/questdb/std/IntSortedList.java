@@ -102,11 +102,31 @@ public class IntSortedList implements Mutable {
     }
 
     private int scanSearch(int v, int low) {
-        for (int i = low; i < size; i++) {
-            if (buffer[i] > v) {
-                return i;
+        // Use binary search for O(log n) complexity instead of O(n) linear scan
+        int high = size - 1;
+        
+        // If low >= size or v is greater than all elements from low onwards
+        if (low >= size || v >= buffer[high]) {
+            return size;
+        }
+        
+        // If v is less than the element at low, return low immediately
+        if (v < buffer[low]) {
+            return low;
+        }
+        
+        // Binary search to find the insertion point
+        while (low <= high) {
+            int mid = (low + high) >>> 1; // Use unsigned right shift to avoid overflow
+            int midVal = buffer[mid];
+            
+            if (midVal <= v) {
+                low = mid + 1;
+            } else {
+                high = mid - 1;
             }
         }
-        return size;
+        
+        return low;
     }
 }
