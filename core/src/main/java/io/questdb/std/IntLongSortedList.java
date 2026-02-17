@@ -120,11 +120,35 @@ public class IntLongSortedList implements Mutable {
     }
 
     private int scanSearch(long v, int low) {
-        for (int i = low; i < size; i++) {
-            if (buf.getQuick(i) > v) {
-                return i;
+        int high = size - 1;
+        
+        // Handle edge cases
+        if (low >= size) {
+            return size;
+        }
+        
+        // Check if value is beyond all elements
+        if (buf.getQuick(high) <= v) {
+            return size;
+        }
+        
+        // Check if value is before the low boundary
+        if (buf.getQuick(low) > v) {
+            return low;
+        }
+        
+        // Binary search for the insertion point
+        while (low <= high) {
+            int mid = low + ((high - low) >>> 1);
+            long midVal = buf.getQuick(mid);
+            
+            if (midVal <= v) {
+                low = mid + 1;
+            } else {
+                high = mid - 1;
             }
         }
-        return size;
+        
+        return low;
     }
 }
