@@ -77,19 +77,23 @@ public class IntSortedList implements Mutable {
     private int binSearch(int v) {
         int low = 0;
         int high = size;
+        final int[] b = this.buffer; // cache field locally for performance
 
         while (high - low > 65) {
             int mid = (low + high - 1) >>> 1;
-            int midVal = buffer[mid];
+            int midVal = b[mid];
 
             if (midVal < v)
                 low = mid + 1;
             else if (midVal > v)
                 high = mid;
             else {
-                while (++mid < high && buffer[mid] == v) {
+                // found equal; scan forward to the first element greater than v
+                int mm = mid + 1;
+                while (mm < high && b[mm] == v) {
+                    mm++;
                 }
-                return mid;
+                return mm;
             }
         }
         return scanSearch(v, low);
