@@ -298,7 +298,8 @@ public final class DecimalParser {
      * @return true if c is '0' through '9', false otherwise
      */
     private static boolean isDigit(char c) {
-        return '0' <= c && c <= '9';
+        int d = c - '0';
+        return d >= 0 && d <= 9;
     }
 
     /**
