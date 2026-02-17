@@ -317,9 +317,28 @@ public final class DecimalParser {
      * @return true if "NaN" or "Infinity" is found at position lo, false otherwise
      */
     private static boolean isNanOrInfinite(char ch, CharSequence cs, int lo, int hi) {
-        return (ch == 'N' && lo + 2 < hi && cs.charAt(lo + 1) == 'a' && cs.charAt(lo + 2) == 'N') ||
-                (ch == 'I' && lo + 7 < hi && cs.charAt(lo + 1) == 'n' && cs.charAt(lo + 2) == 'f'
-                        && cs.charAt(lo + 3) == 'i' && cs.charAt(lo + 4) == 'n' && cs.charAt(lo + 5) == 'i'
-                        && cs.charAt(lo + 6) == 't' && cs.charAt(lo + 7) == 'y');
+        final int rem = hi - lo;
+        if (ch == 'N') {
+            // Need exactly 3 characters: 'N' 'a' 'N'
+            if (rem >= 3) {
+                return cs.charAt(lo + 1) == 'a' && cs.charAt(lo + 2) == 'N';
+            }
+            return false;
+        } else if (ch == 'I') {
+            // Need exactly 8 characters: 'I' 'n' 'f' 'i' 'n' 'i' 't' 'y'
+            if (rem >= 8) {
+                // cache chars to avoid multiple charAt calls
+                final char c1 = cs.charAt(lo + 1);
+                final char c2 = cs.charAt(lo + 2);
+                final char c3 = cs.charAt(lo + 3);
+                final char c4 = cs.charAt(lo + 4);
+                final char c5 = cs.charAt(lo + 5);
+                final char c6 = cs.charAt(lo + 6);
+                final char c7 = cs.charAt(lo + 7);
+                return c1 == 'n' && c2 == 'f' && c3 == 'i' && c4 == 'n' && c5 == 'i' && c6 == 't' && c7 == 'y';
+            }
+            return false;
+        }
+        return false;
     }
 }
