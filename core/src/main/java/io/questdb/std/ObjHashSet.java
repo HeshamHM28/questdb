@@ -166,7 +166,13 @@ public class ObjHashSet<T> extends AbstractSet<T> implements Mutable {
     }
 
     private int idx(T key) {
-        return key == null ? 0 : (Hash.spread(key.hashCode()) & mask);
+        if (key == null) {
+            return 0;
+        }
+        // cache field and hashCode to local variables to reduce field access and enable better JIT optimization
+        int m = mask;
+        int h = key.hashCode();
+        return Hash.spread(h) & m;
     }
 
     private void move(int from, int to) {
