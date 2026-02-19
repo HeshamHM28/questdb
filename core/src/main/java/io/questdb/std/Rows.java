@@ -25,13 +25,15 @@
 package io.questdb.std;
 
 public final class Rows {
+    private static final long LOCAL_ROWID_MASK = (1L << 44) - 1L;
+
     public static final int MAX_SAFE_PARTITION_INDEX = (1 << 19) - 1;
 
     private Rows() {
     }
 
     public static long toLocalRowID(long rowID) {
-        return rowID & 0xFFFFFFFFFFFL;
+        return rowID & LOCAL_ROWID_MASK;
     }
 
     public static int toPartitionIndex(long rowID) {
