@@ -144,7 +144,9 @@ public final class Vect {
         } else {
             base = "Vanilla";
         }
-        return " [" + base + "," + Vect.getSupportedInstructionSet() + "]";
+        StringBuilder sb = new StringBuilder(16 + base.length());
+        sb.append(" [").append(base).append(',').append(inst).append(']');
+        return sb.toString();
     }
 
     public static native void indexReshuffle128Bit(long pSrc, long pDest, long pIndex, long count);
