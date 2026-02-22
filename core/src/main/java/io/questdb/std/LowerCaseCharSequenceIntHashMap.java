@@ -76,8 +76,9 @@ public class LowerCaseCharSequenceIntHashMap extends AbstractLowerCaseCharSequen
             values[-index - 1] = value;
             return false;
         }
-        final String keyString = Chars.toString(key);
-        putAt0(index, keyString, value);
+        // Avoid allocating a new String if key is already a String.
+        final CharSequence keyToStore = (key instanceof String) ? key : Chars.toString(key);
+        putAt0(index, keyToStore, value);
         return true;
     }
 
