@@ -93,7 +93,8 @@ public class LowerCaseCharSequenceIntHashMap extends AbstractLowerCaseCharSequen
 
     public int removeEntry(CharSequence key) {
         int index = keyIndex(key);
-        int value = valueAt(index);
+        // inline the lookup to avoid an extra method call on the hot path
+        int value = index < 0 ? values[-index - 1] : noEntryValue;
         removeAt(index);
         return value;
     }
