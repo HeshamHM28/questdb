@@ -1306,7 +1306,58 @@ public class ConcurrentIntHashMap<V> implements Serializable {
      * @throws NullPointerException if the specified key is null
      */
     public V remove(int key) {
-        return replaceNode(key, null, null);
+        int hash = spread(keyHashCode(key));
+        for (Node<V>[] tab = table; ; ) {
+            Node<V> f;
+            int n, i, fh;
+            if (tab == null || (n = tab.length) == 0 ||
+                    (f = tabAt(tab, i = (n - 1) & hash)) == null)
+                break;
+            else if ((fh = f.hash) == MOVED)
+                tab = helpTransfer(tab, f);
+            else {
+                V oldVal = null;
+                boolean validated = false;
+                synchronized (f) {
+                    if (tabAt(tab, i) == f) {
+                        if (fh >= 0) {
+                            validated = true;
+                            for (Node<V> e = f, pred = null; ; ) {
+                                if (e.hash == hash && e.key == key) {
+                                    oldVal = e.val;
+                                    if (pred != null)
+                                        pred.next = e.next;
+                                    else
+                                        setTabAt(tab, i, e.next);
+                                    break;
+                                }
+                                pred = e;
+                                if ((e = e.next) == null)
+                                    break;
+                            }
+                        } else if (f instanceof TreeBin) {
+                            validated = true;
+                            TreeBin<V> t = (TreeBin<V>) f;
+                            TreeNode<V> r, p;
+                            if ((r = t.root) != null &&
+                                    (p = r.findTreeNode(hash, key)) != null) {
+                                oldVal = p.val;
+                                if (t.removeTreeNode(p))
+                                    setTabAt(tab, i, untreeify(t.first));
+                            }
+                        }
+                    }
+                }
+                if (validated) {
+                    if (oldVal != null) {
+                        addCount(-1L, -1);
+                        return oldVal;
+                    }
+                    break;
+                }
+            }
+        }
+        return null;
     }
 
     // Hashtable legacy methods
