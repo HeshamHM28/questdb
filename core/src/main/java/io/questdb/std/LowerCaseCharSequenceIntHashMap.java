@@ -99,7 +99,11 @@ public class LowerCaseCharSequenceIntHashMap extends AbstractLowerCaseCharSequen
     }
 
     public int valueAt(int index) {
-        return index < 0 ? values[-index - 1] : noEntryValue;
+        if (index < 0) {
+            int[] vals = values;
+            return vals[-index - 1];
+        }
+        return noEntryValue;
     }
 
     private void putAt0(int index, CharSequence key, int value) {
