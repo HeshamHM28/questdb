@@ -1332,7 +1332,16 @@ public class ConcurrentIntHashMap<V> implements Serializable {
      * {@inheritDoc}
      */
     public int size() {
-        long n = sumCount();
+        // Inlined variant of sumCount() to avoid method call overhead on hot path.
+        long n = baseCount;
+        CounterCell[] as = counterCells;
+        if (as != null) {
+            for (int i = 0, len = as.length; i < len; ++i) {
+                CounterCell a;
+                if ((a = as[i]) != null)
+                    n += a.value;
+            }
+        }
         return ((n < 0L) ? 0 :
                 (n > (long) Integer.MAX_VALUE) ? Integer.MAX_VALUE :
                         (int) n);
