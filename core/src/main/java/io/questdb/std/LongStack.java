@@ -73,12 +73,12 @@ public class LongStack implements Mutable {
             throw new IllegalStateException("pollLast() called while bottom != 0");
         }
         final long[] elems = elements;
-        int newTail = tail;
-        if (head != newTail && --newTail < 0) {
-            newTail = mask;
-        }
+        final int head = this.head;
+        final int tail = this.tail;
+        // Compute newTail with a single masked arithmetic operation to avoid branch/multiple array accesses.
+        final int newTail = (head != tail) ? ((tail - 1) & mask) : tail;
         final long elem = elems[newTail];
-        tail = newTail;
+        this.tail = newTail;
         elems[newTail] = NO_ENTRY_VALUE;
         return elem;
     }
